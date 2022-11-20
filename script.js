@@ -1,78 +1,71 @@
-function getHistory(){
-	return document.getElementById("history-value").innerText;
+const calculatorDisplay = document.querySelector('h1');
+const inputBtns = document.querySelectorAll('button');
+const clearBtn = document.getElementById('clear-btn');
+
+let firstValue = 0;
+let operatorValue = '';
+let nextValue = false;
+
+function numberValue(number) {
+  if (nextValue) {
+    calculatorDisplay.textContent = number;
+    nextValue = false;
+  } else {
+    const displayValue = calculatorDisplay.textContent;
+    calculatorDisplay.textContent =
+      displayValue === '0' ? number : displayValue + number;
+  }
 }
-function printHistory(num){
-	document.getElementById("history-value").innerText=num;
+
+function addDecimal() {
+  if (nextValue) return;
+  if (!calculatorDisplay.textContent.includes('.')) {
+    calculatorDisplay.textContent = `${calculatorDisplay.textContent}.`;
+  }
 }
-function getOutput(){
-	return document.getElementById("output-value").innerText;
+
+const calculate = {
+  '/': (firstNumber, secoundNumber) => firstNumber / secoundNumber,
+  '*': (firstNumber, secoundNumber) => firstNumber * secoundNumber,
+  '+': (firstNumber, secoundNumber) => firstNumber + secoundNumber,
+  '-': (firstNumber, secoundNumber) => firstNumber - secoundNumber,
+  '=': (firstNumber, secoundNumber) => secoundNumber,
+};
+
+function useOperator(operator) {
+  const currentValue = Number(calculatorDisplay.textContent);
+  if (operatorValue && nextValue) {
+    operatorValue = operator;
+    return;
+  }
+  if (!firstValue) {
+    firstValue = currentValue;
+  } else {
+    //console.log(firstValue, operatorValue, currentValue);
+    const calculation = calculate[operatorValue](firstValue, currentValue);
+    //console.log('calculation:', calculation);
+    calculatorDisplay.textContent = calculation;
+    firstValue = calculation;
+  }
+  nextValue = true;
+  operatorValue = operator;
 }
-function printOutput(num){
-	if(num==""){
-		document.getElementById("output-value").innerText=num;
-	}
-	else{
-		document.getElementById("output-value").innerText=getFormattedNumber(num);
-	}	
+
+inputBtns.forEach((inputBtn) => {
+  if (inputBtn.classList.length === 0) {
+    inputBtn.addEventListener('click', () => numberValue(inputBtn.value));
+  } else if (inputBtn.classList.contains('operator')) {
+    inputBtn.addEventListener('click', () => useOperator(inputBtn.value));
+  } else if (inputBtn.classList.contains('decimal')) {
+    inputBtn.addEventListener('click', () => addDecimal());
+  }
+});
+
+function clearAll() {
+  firstValue = 0;
+  operatorValue = '';
+  nextValue = false;
+  calculatorDisplay.textContent = '0';
 }
-function getFormattedNumber(num){
-	if(num=="-"){
-		return "";
-	}
-	var n = Number(num);
-	var value = n.toLocaleString("en");
-	return value;
-}
-function reverseNumberFormat(num){
-	return Number(num.replace(/,/g,''));
-}
-var operator = document.getElementsByClassName("operator");
-for(var i =0;i<operator.length;i++){
-	operator[i].addEventListener('click',function(){
-		if(this.id=="clear"){
-			printHistory("");
-			printOutput("");
-		}
-		else if(this.id=="backspace"){
-			var output=reverseNumberFormat(getOutput()).toString();
-			if(output){//if output has a value
-				output= output.substr(0,output.length-1);
-				printOutput(output);
-			}
-		}
-		else{
-			var output=getOutput();
-			var history=getHistory();
-			if(output==""&&history!=""){
-				if(isNaN(history[history.length-1])){
-					history= history.substr(0,history.length-1);
-				}
-			}
-			if(output!="" || history!=""){
-				output= output==""?output:reverseNumberFormat(output);
-				history=history+output;
-				if(this.id=="="){
-					var result=eval(history);
-					printOutput(result);
-					printHistory("");
-				}
-				else{
-					history=history+this.id;
-					printHistory(history);
-					printOutput("");
-				}
-			}
-		}
-		
-	});
-}
-var number = document.getElementsByClassName("number");
-for(var i =0;i<number.length;i++){
-	number[i].addEventListener('click',function(){
-		var output=reverseNumberFormat(getOutput());
-		if(output!=NaN){ //if output is a number
-			output=output+this.id;
-			printOutput(output);
-		}
-	});
-}
+
+clearBtn.addEventListener('click', clearAll);
